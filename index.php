@@ -1,12 +1,23 @@
-<?
-if ($_SERVER['REQUEST_METHOD'] === 'POST')
-{
-  $file = '/tmp/sample-app.log';
-  $message = file_get_contents('php://input');
-  file_put_contents($file, date('Y-m-d H:i:s') . " Received message: " . $message . "\n", FILE_APPEND);
-}
-else
-{
+<?php
+
+require 'vendor/autoload.php';
+
+use Aws\Sts\StsClient;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
+
+$s3 = new S3Client([
+    'region' => 'us-east-1',
+    'version' => 'latest',
+]);
+
+// Retrieve the list of buckets.
+$buckets = $s3->listBuckets();
+
+
+$var1 = "Hello world!";
+$var2 = "var2";
+$var3 = "var3";
 ?>
 <!doctype html>
 <html lang="en">
@@ -38,17 +49,18 @@ else
             <li><a href="http://docs.amazonwebservices.com/elasticbeanstalk/latest/dg/customize-containers-resources.html">Customizing Environment Resources</a></li>
         </ul>
 
-        <h2>AWS SDK for PHP</h2>
+        <h2>Output</h2>
         <ul>
-            <li><a href="http://aws.amazon.com/sdkforphp">AWS SDK for PHP home</a></li>
-            <li><a href="http://aws.amazon.com/php">PHP developer center</a></li>
-            <li><a href="https://github.com/aws/aws-sdk-php">AWS SDK for PHP on GitHub</a></li>
+          <?php foreach ($buckets['Buckets'] as $bucket){
+              	echo "<li>" . $bucket['Name'] . "</li>";
+              }
+          ?>
+            <li><? echo $var1 ?></li>
+            <li><? echo $var2 ?></li>
+            <li><? echo $result ?></li>
         </ul>
     </section>
 
     <!--[if lt IE 9]><script src="http://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"></script><![endif]-->
 </body>
 </html>
-<? 
-} 
-?>
