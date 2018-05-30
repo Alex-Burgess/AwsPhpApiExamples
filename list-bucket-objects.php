@@ -7,6 +7,8 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 
+$bucket = 'app-php-demo-1';
+
 try {
   $assumeRoleCredentials = new AssumeRoleCredentialProvider([
     'client' => new StsClient([
@@ -20,16 +22,27 @@ try {
   ]);
 
   $s3 = new S3Client([
-      'region' => 'us-east-1',
+      'region' => 'eu-west-1',
       'version' => 'latest',
       'credentials' => $assumeRoleCredentials
   ]);
 
-  // Retrieve the list of buckets.
-  $buckets = $s3->listBuckets();
+  $result = $s3->listObjects([
+      'Bucket' => $bucket
+  ]);
+
+  // $keyname = 'testfile.txt';
+  // // Upload data.
+  // $put_result = $s3->putObject([
+  //     'Bucket' => $bucket,
+  //     'Key'    => $keyname,
+  //     'Body'   => 'Hello, world!',
+  //     'ACL'    => 'private'
+  // ]);
+
 } catch (Exception $e) {
-  $error_message = $e->getMessage();
   $error = $e;
+  $error_message = $e->getMessage();
 }
 ?>
 <!doctype html>
@@ -53,18 +66,27 @@ try {
 
     <section class="instructions">
         <h2>S3 Buckets</h2>
-        <ul>
           <?php
             if ($error) {
               echo "<ul><li>" . $error_message . "</li>";
               echo "<li>" . $error . "</li></ul>";
             } else {
-              foreach ($buckets['Buckets'] as $bucket){
-                echo "<li>" . $bucket['Name'] . "</li>";
+              foreach ($result['Contents'] as $object) {
+                  //Creating a presigned URL
+                  $cmd = $s3->getCommand('GetObject', [
+                      'Bucket' => $bucket,
+                      'Key'    => $object['Key']
+                  ]);
+
+                  $request = $s3->createPresignedRequest($cmd, '+20 minutes');
+
+                  // Get the actual presigned-url
+                  $presignedUrl = (string) $request->getUri();
+
+                  echo "<br><img src=\"" . $presignedUrl . "\"</br>";
               }
             }
           ?>
-        </ul>
     </section>
 </body>
 </html>

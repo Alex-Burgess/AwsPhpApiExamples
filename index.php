@@ -21,7 +21,7 @@
         <h2>S3 Samples</h2>
         <ul>
           <li><a href="/list-buckets.php">List Buckets</a></li>
-          <li><a href="/list-buckets.php">List Buckets</a></li>
+          <li><a href="/list-bucket-objects.php">List Bucket Objects</a></li>
         </ul>
     </section>
 </body>
