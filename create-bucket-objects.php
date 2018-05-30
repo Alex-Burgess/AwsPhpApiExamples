@@ -27,6 +27,15 @@ try {
       'credentials' => $assumeRoleCredentials
   ]);
 
+  $keyname = 'testfile.txt';
+  // Upload data.
+  $put_result = $s3->putObject([
+      'Bucket' => $bucket,
+      'Key'    => $keyname,
+      'Body'   => 'Hello, world!',
+      'ACL'    => 'private'
+  ]);
+
   $result = $s3->listObjects([
       'Bucket' => $bucket
   ]);
@@ -41,7 +50,7 @@ try {
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>List Bucket Objects</title>
+    <title>Create Bucket Objects</title>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lobster+Two" type="text/css">
     <link rel="icon" href="https://awsmedia.s3.amazonaws.com/favicon.ico" type="image/ico" >
@@ -50,8 +59,8 @@ try {
 </head>
 <body>
     <section class="congratulations">
-        <h1>PHP List S3 Buckets</h1>
-        <p>Some snippets of code demonstrating how to get S3 buckets.</p>
+        <h1>PHP Create S3 Bucket Object</h1>
+        <p>Some snippets of code demonstrating how to Create a S3 bucket object.</p>
     </section>
 
     <section class="instructions">
@@ -61,11 +70,11 @@ try {
               echo "<ul><li>" . $error_message . "</li>";
               echo "<li>" . $error . "</li></ul>";
             } else {
-              foreach ($result['Contents'] as $object) {
+              //foreach ($result['Contents'] as $object) {
                   //Creating a presigned URL
                   $cmd = $s3->getCommand('GetObject', [
                       'Bucket' => $bucket,
-                      'Key'    => $object['Key']
+                      'Key'    => $keyname
                   ]);
 
                   $request = $s3->createPresignedRequest($cmd, '+20 minutes');
@@ -73,8 +82,8 @@ try {
                   // Get the actual presigned-url
                   $presignedUrl = (string) $request->getUri();
 
-                  echo "<br><img src=\"" . $presignedUrl . "\"</br>";
-              }
+                  echo "<a href=\"" . $presignedUrl . "\">" . $keyname . "</a>";
+              //}
             }
           ?>
     </section>
