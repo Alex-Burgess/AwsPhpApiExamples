@@ -46,8 +46,8 @@ try {
 </head>
 <body>
     <section class="congratulations">
-        <h1>PHP List S3 Buckets</h1>
-        <p>Some snippets of code demonstrating how to get S3 buckets.</p>
+        <h1>List S3 Buckets</h1>
+        <p>Code samples demonstrating how to get a list S3 buckets.</p>
     </section>
 
     <section class="instructions">

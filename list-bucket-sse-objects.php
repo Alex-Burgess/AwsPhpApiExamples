@@ -28,6 +28,12 @@ try {
       'credentials' => $assumeRoleCredentials
   ]);
 
+  // $s3 = new S3Client([
+  //     'region' => 'eu-west-1',
+  //     'version' => 'latest',
+  //     'signature' => 'v4',
+  // ]);
+
   $result = $s3->listObjects([
       'Bucket' => $bucket
   ]);
@@ -75,7 +81,6 @@ try {
                   $presignedUrl = (string) $request->getUri();
 
                   echo "<br><img src=\"" . $presignedUrl . "\"</br>";
-                  echo "<br>$presignedUrl</br>";
               }
             }
           ?>

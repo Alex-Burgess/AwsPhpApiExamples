@@ -50,8 +50,9 @@ try {
 </head>
 <body>
     <section class="congratulations">
-        <h1>PHP List S3 Buckets</h1>
-        <p>Some snippets of code demonstrating how to get S3 buckets.</p>
+        <h1>Get Bucket Objects</h1>
+        <p>Code samples demonstrating how to get objects from an S3 bucket.</p>
+        <p> S3 Bucket: app-php-demo-1</p>
     </section>
 
     <section class="instructions">
