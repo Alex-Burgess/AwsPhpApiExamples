@@ -14,7 +14,7 @@ try {
         'version' => '2011-06-15'
     ]),
     'assume_role_params' => [
-        'RoleArn' => 'arn:aws:iam::369331073513:role/PhpSamplesRole', // REQUIRED
+        'RoleArn' => 'arn:aws:iam::369331073513:role/FroomeyS3AccessRole', // REQUIRED
         'RoleSessionName' => 'test', // REQUIRED
     ]
   ]);
