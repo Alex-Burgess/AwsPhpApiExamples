@@ -7,7 +7,7 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 
-$bucket = 'app-php-demo-1';
+$bucket = 'froome-dog';
 
 try {
   $assumeRoleCredentials = new AssumeRoleCredentialProvider([
@@ -52,7 +52,7 @@ try {
     <section class="congratulations">
         <h1>Get Bucket Objects</h1>
         <p>Code samples demonstrating how to get objects from an S3 bucket.</p>
-        <p> S3 Bucket: app-php-demo-1</p>
+        <p> S3 Bucket: froome-dog</p>
     </section>
 
     <section class="instructions">
@@ -63,6 +63,7 @@ try {
               echo "<li>" . $error . "</li></ul>";
             } else {
               foreach ($result['Contents'] as $object) {
+                if (preg_match('/320x240.JPG/', $object['Key'])) {
                   //Creating a presigned URL
                   $cmd = $s3->getCommand('GetObject', [
                       'Bucket' => $bucket,
@@ -74,7 +75,8 @@ try {
                   // Get the actual presigned-url
                   $presignedUrl = (string) $request->getUri();
 
-                  echo "<br><img src=\"" . $presignedUrl . "\"</br>";
+                  echo "<br><img src=\"" . $presignedUrl . "\"></br>";
+                }
               }
             }
           ?>
