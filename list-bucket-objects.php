@@ -52,11 +52,10 @@ try {
     <section class="congratulations">
         <h1>Get Bucket Objects</h1>
         <p>Code samples demonstrating how to get objects from an S3 bucket.</p>
-        <p> S3 Bucket: froome-dog</p>
     </section>
 
     <section class="instructions">
-        <h2>S3 Buckets</h2>
+        <h2><?php echo $bucket ?></h2>
           <?php
             if ($error) {
               echo "<ul><li>" . $error_message . "</li>";
