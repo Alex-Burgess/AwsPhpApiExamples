@@ -21,8 +21,8 @@
         <ul>
           <li><a href="/list-buckets.php">List Buckets</a></li>
           <li><a href="/list-bucket-objects.php">List Bucket Objects</a></li>
-          <li><a href="/create-bucket-objects.php">Create Bucket Objects</a></li>
           <li><a href="/list-bucket-sse-objects.php">List Bucket with SSE Objects</a></li>
+          <li><a href="/create-bucket-objects.php">Create Bucket Objects</a></li>
         </ul>
     </section>
 </body>
