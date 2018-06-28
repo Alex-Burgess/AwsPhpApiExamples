@@ -7,7 +7,7 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 
-$bucket = 'app-php-demo-2-sse';
+$bucket = 'froome-dog-sse';
 
 try {
   $assumeRoleCredentials = new AssumeRoleCredentialProvider([
@@ -16,7 +16,7 @@ try {
         'version' => '2011-06-15'
     ]),
     'assume_role_params' => [
-        'RoleArn' => 'arn:aws:iam::369331073513:role/PhpSamplesRole', // REQUIRED
+        'RoleArn' => 'arn:aws:iam::369331073513:role/FroomeyS3AccessRole', // REQUIRED
         'RoleSessionName' => 'test', // REQUIRED
     ]
   ]);
@@ -25,14 +25,8 @@ try {
       'region' => 'eu-west-1',
       'version' => 'latest',
       'signature' => 'v4',
-      'credentials' => $assumeRoleCredentials
+      'credentials' => $assumeRoleCredentials   // Comment to run code as CLI user (Alex)
   ]);
-
-  // $s3 = new S3Client([
-  //     'region' => 'eu-west-1',
-  //     'version' => 'latest',
-  //     'signature' => 'v4',
-  // ]);
 
   $result = $s3->listObjects([
       'Bucket' => $bucket
@@ -57,18 +51,19 @@ try {
 </head>
 <body>
     <section class="congratulations">
-        <h1>PHP List S3 Buckets</h1>
-        <p>Some snippets of code demonstrating how to get S3 buckets.</p>
+        <h1>Get Bucket Objects with SSE</h1>
+        <p>Code samples demonstrating how to get objects from an S3 bucket, where the bucket and contents are encrypted with AWS KMS key.</p>
     </section>
 
     <section class="instructions">
-        <h2>S3 Buckets</h2>
+        <h2><?php echo $bucket ?></h2>
           <?php
             if ($error) {
               echo "<ul><li>" . $error_message . "</li>";
               echo "<li>" . $error . "</li></ul>";
             } else {
               foreach ($result['Contents'] as $object) {
+                if (preg_match('/320x240.JPG/', $object['Key'])) {
                   //Creating a presigned URL
                   $cmd = $s3->getCommand('GetObject', [
                       'Bucket' => $bucket,
@@ -81,6 +76,7 @@ try {
                   $presignedUrl = (string) $request->getUri();
 
                   echo "<br><img src=\"" . $presignedUrl . "\"</br>";
+                }
               }
             }
           ?>
