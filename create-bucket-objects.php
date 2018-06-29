@@ -7,43 +7,7 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 
-$bucket = 'app-php-demo-1';
-
-try {
-  $assumeRoleCredentials = new AssumeRoleCredentialProvider([
-    'client' => new StsClient([
-        'region' => 'eu-west-1',
-        'version' => '2011-06-15'
-    ]),
-    'assume_role_params' => [
-        'RoleArn' => 'arn:aws:iam::369331073513:role/PhpSamplesRole', // REQUIRED
-        'RoleSessionName' => 'test', // REQUIRED
-    ]
-  ]);
-
-  $s3 = new S3Client([
-      'region' => 'eu-west-1',
-      'version' => 'latest',
-      'credentials' => $assumeRoleCredentials
-  ]);
-
-  $keyname = 'testfile.txt';
-  // Upload data.
-  $put_result = $s3->putObject([
-      'Bucket' => $bucket,
-      'Key'    => $keyname,
-      'Body'   => 'Hello, world!',
-      'ACL'    => 'private'
-  ]);
-
-  $result = $s3->listObjects([
-      'Bucket' => $bucket
-  ]);
-
-} catch (Exception $e) {
-  $error = $e;
-  $error_message = $e->getMessage();
-}
+$GLOBALS['bucket'] = 'froome-dog';
 ?>
 <!doctype html>
 <html lang="en">
@@ -56,6 +20,24 @@ try {
     <link rel="icon" href="https://awsmedia.s3.amazonaws.com/favicon.ico" type="image/ico" >
     <link rel="shortcut icon" href="https://awsmedia.s3.amazonaws.com/favicon.ico" type="image/ico" >
     <link rel="stylesheet" href="/styles.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+    $(function () {
+      $('#create_form').on('submit', function (e) {
+         e.preventDefault();
+
+         $.ajax({
+            type: 'post',
+            url: 'create-object.php',
+            data: $('form').serialize(),
+            success: function (data) {
+               //alert('form was submitted');
+               $('#result').append(data);
+            }
+         });
+      });
+    });
+    </script>
 </head>
 <body>
     <section class="congratulations">
@@ -64,28 +46,14 @@ try {
     </section>
 
     <section class="instructions">
-        <h2>S3 Buckets</h2>
-          <?php
-            if ($error) {
-              echo "<ul><li>" . $error_message . "</li>";
-              echo "<li>" . $error . "</li></ul>";
-            } else {
-              //foreach ($result['Contents'] as $object) {
-                  //Creating a presigned URL
-                  $cmd = $s3->getCommand('GetObject', [
-                      'Bucket' => $bucket,
-                      'Key'    => $keyname
-                  ]);
-
-                  $request = $s3->createPresignedRequest($cmd, '+20 minutes');
-
-                  // Get the actual presigned-url
-                  $presignedUrl = (string) $request->getUri();
-
-                  echo "<a href=\"" . $presignedUrl . "\">" . $keyname . "</a>";
-              //}
-            }
-          ?>
+         <h2>S3 Buckets</h2>
+         <p>The following form can be used to create a new object in S3.</p>
+        <form id="create_form">
+          Name: <input type="text" name="filename" id="filename"><br/>
+          Content: <textarea name="content" rows="5" cols="40"></textarea><br/>
+          <input name="submit" type="submit" value="Submit">
+        </form>
+        <p>Results: <span id="result"></span></p>
     </section>
 </body>
 </html>
