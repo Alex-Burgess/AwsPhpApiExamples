@@ -1,12 +1,5 @@
 <?php
 
-require 'vendor/autoload.php';
-
-use Aws\Sts\StsClient;
-use Aws\S3\S3Client;
-use Aws\S3\Exception\S3Exception;
-use Aws\Credentials\AssumeRoleCredentialProvider;
-
 $GLOBALS['bucket'] = 'froome-dog';
 ?>
 <!doctype html>
