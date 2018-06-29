@@ -32,7 +32,7 @@ $GLOBALS['bucket'] = 'froome-dog';
             data: $('form').serialize(),
             success: function (data) {
                //alert('form was submitted');
-               $('#result').append(data);
+               $('#result').append('<li>' + data + '</li>');
             }
          });
       });
@@ -41,19 +41,24 @@ $GLOBALS['bucket'] = 'froome-dog';
 </head>
 <body>
     <section class="congratulations">
-        <h1>PHP Create S3 Bucket Object</h1>
-        <p>Some snippets of code demonstrating how to Create a S3 bucket object.</p>
+        <h1>Create S3 Bucket Objects</h1>
+        <p>Sample code demonstrating how to create S3 bucket objects.</p>
+        <p>Also demonstrates use of AJAX to dynamically call another php script and update the page with results.</p>
     </section>
 
     <section class="instructions">
-         <h2>S3 Buckets</h2>
-         <p>The following form can be used to create a new object in S3.</p>
-        <form id="create_form">
-          Name: <input type="text" name="filename" id="filename"><br/>
-          Content: <textarea name="content" rows="5" cols="40"></textarea><br/>
-          <input name="submit" type="submit" value="Submit">
-        </form>
-        <p>Results: <span id="result"></span></p>
+      <h2>Create a Bucket Object</h2>
+         <p>The following form can be used to create a text file in the <b> <?php echo $GLOBALS['bucket'] ?> </b> bucket.</p>
+         <form id="create_form">
+           Name: <input type="text" name="filename" id="filename"><br/>
+           Content: <textarea name="content" rows="5" cols="40"></textarea><br/>
+           <input name="submit" type="submit" value="Create File">
+         </form>
+         <div class="results">
+            <p>Files created:</p>
+            <ul id="result">
+            </ul>
+         </div>
     </section>
 </body>
 </html>
