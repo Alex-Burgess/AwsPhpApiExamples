@@ -23,9 +23,9 @@ $GLOBALS['bucket'] = 'froome-dog';
             type: 'post',
             url: 'create-object.php',
             data: $('form').serialize(),
-            success: function (data) {
+            success: function (result) {
                //alert('form was submitted');
-               $('#result').append('<li>' + data + '</li>');
+               $('#result').append('<li>' + result + '</li>');
             }
          });
       });
@@ -45,6 +45,7 @@ $GLOBALS['bucket'] = 'froome-dog';
          <form id="create_form">
            Name: <input type="text" name="filename" id="filename"><br/>
            Content: <textarea name="content" rows="5" cols="40"></textarea><br/>
+           <input type="hidden" id="bucketname" name="bucketname" value="<?php echo $GLOBALS['bucket'] ?>">
            <input name="submit" type="submit" value="Create File">
          </form>
          <div class="results">

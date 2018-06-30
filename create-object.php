@@ -5,7 +5,7 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 
-$bucket = 'froome-dog';
+$bucket = $_POST['bucketname'];
 $filename = $_POST['filename'] . '.txt';
 $keyname = 'uploads/' . $filename;
 
@@ -40,7 +40,7 @@ try {
   ]);
 
   // echo $result;      // TODO can this be parsed to get a success message??
-  echo $filename . " created in uploads folder";
+  echo $filename . " with path (uploads/) created in " . $bucket . " bucket";
 } catch (Exception $e) {
   $error = $e;
   $error_message = $e->getMessage();
