@@ -1,0 +1,58 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "sampleApplication": {
+      "Type": "AWS::ElasticBeanstalk::Application",
+      "Properties": {
+         "ApplicationName" : "PHP API Code Examples",
+         "Description": "AWS Elastic Beanstalk Sample Application"
+      }
+    },
+    "sampleApplicationVersion": {
+      "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
+      "Properties": {
+        "ApplicationName": { "Ref": "sampleApplication" },
+        "Description": "PHP API Code Examples Application Version",
+        "SourceBundle": {
+          "S3Bucket":  "alex-demo-files",
+          "S3Key": "php-applications/php-api-code-examples_v1.0.1.zip"
+        }
+      }
+    },
+    "sampleConfigurationTemplate": {
+      "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
+      "Properties": {
+        "ApplicationName": { "Ref": "sampleApplication" },
+        "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "sampleApplication" } ] ] },
+        "OptionSettings": [
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MinSize",
+            "Value": "1"
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MaxSize",
+            "Value": "3"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:environment",
+            "OptionName": "EnvironmentType",
+            "Value": "LoadBalanced"
+          }
+        ],
+        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.7.1 running PHP 7.1"
+      }
+    },
+    "sampleEnvironment": {
+      "Type": "AWS::ElasticBeanstalk::Environment",
+      "Properties": {
+        "ApplicationName": { "Ref": "sampleApplication" },
+        "EnvironmentName" : "PHP-API-Examples-Environment",
+        "Description": "Environment running PHP API Examples",
+        "TemplateName": { "Ref": "sampleConfigurationTemplate" },
+        "VersionLabel": { "Ref": "sampleApplicationVersion" }
+      }
+    }
+  }
+}
