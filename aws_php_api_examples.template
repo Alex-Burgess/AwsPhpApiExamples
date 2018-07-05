@@ -1,10 +1,20 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+     "environment" : {
+         "Type" : "String",
+         "Default" : "blue",
+         "AllowedValues" : ["blue", "green"],
+         "Description" : "Enter the environment."
+      }
+  },
   "Resources": {
     "sampleApplication": {
       "Type": "AWS::ElasticBeanstalk::Application",
       "Properties": {
-         "ApplicationName" : "PHP API Code Examples",
+         "ApplicationName" : {
+            "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "environment" }} ]
+         },
          "Description": "AWS Elastic Beanstalk Sample Application"
       }
     },
@@ -15,7 +25,7 @@
         "Description": "PHP API Code Examples Application Version",
         "SourceBundle": {
           "S3Bucket":  "alex-demo-files",
-          "S3Key": "php-applications/php-api-code-examples_v1.0.1.zip"
+          "S3Key": "php-applications/php-api-code-examples_v1.0.2.zip"
         }
       }
     },
@@ -48,7 +58,9 @@
       "Type": "AWS::ElasticBeanstalk::Environment",
       "Properties": {
         "ApplicationName": { "Ref": "sampleApplication" },
-        "EnvironmentName" : "PHP-API-Examples-Environment",
+        "EnvironmentName" : {
+            "Fn::Sub": [ "PHP-API-Examples-${env}", { "env": {"Ref" : "environment" }} ]
+           },
         "Description": "Environment running PHP API Examples",
         "TemplateName": { "Ref": "sampleConfigurationTemplate" },
         "VersionLabel": { "Ref": "sampleApplicationVersion" }
