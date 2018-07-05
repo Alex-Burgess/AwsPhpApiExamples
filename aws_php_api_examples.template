@@ -25,7 +25,7 @@
         "Description": "PHP API Code Examples Application Version",
         "SourceBundle": {
           "S3Bucket":  "alex-demo-files",
-          "S3Key": "php-applications/php-api-code-examples_v1.0.2.zip"
+          "S3Key": "php-applications/php-api-code-examples_v1.0.3.zip"
         }
       }
     },
@@ -49,7 +49,17 @@
             "Namespace": "aws:elasticbeanstalk:environment",
             "OptionName": "EnvironmentType",
             "Value": "LoadBalanced"
-          }
+          },
+          {
+           "Namespace": "aws:elasticbeanstalk:environment",
+           "OptionName": "ServiceRole",
+           "Value": "aws-elasticbeanstalk-service-role"
+         },
+         {
+           "Namespace": "aws:autoscaling:launchconfiguration",
+           "OptionName": "IamInstanceProfile",
+           "Value": "aws-elasticbeanstalk-ec2-role"
+         }
         ],
         "SolutionStackName": "64bit Amazon Linux 2018.03 v2.7.1 running PHP 7.1"
       }
