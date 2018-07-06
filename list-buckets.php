@@ -7,6 +7,19 @@ use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 
+$ini = parse_ini_file('config/app.ini', true);
+
+// An environment variable is set in elastic beanstalk to designate the application environment
+// The app.ini files contains the environment specific configuration, for example role arn.
+if ($_SERVER['PHP_APP_ENV'] == 'DEV') {
+   $env_array = $ini['dev'];
+} elseif ($_SERVER['PHP_APP_ENV'] == 'TEST') {
+   $env_array = $ini['test'];
+} else {
+   $env_array = $ini['test'];
+}
+
+
 try {
   $assumeRoleCredentials = new AssumeRoleCredentialProvider([
     'client' => new StsClient([
@@ -14,8 +27,8 @@ try {
         'version' => '2011-06-15'
     ]),
     'assume_role_params' => [
-        'RoleArn' => 'arn:aws:iam::369331073513:role/FroomeyS3AccessRole', // REQUIRED
-        'RoleSessionName' => 'test', // REQUIRED
+        'RoleArn' => $env_array['roleArn'], // REQUIRED
+        'RoleSessionName' => $env_array['roleSessionName'], // REQUIRED
     ]
   ]);
 
