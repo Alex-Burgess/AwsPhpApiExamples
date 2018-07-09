@@ -1,5 +1,5 @@
 <?php
-require 'vendor/autoload.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
 require 's3-connection.php';     // Provides S3 connection in variable $s3 or $s3_connect_error
 
 $bucket = $_POST['bucketname'];

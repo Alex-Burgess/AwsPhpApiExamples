@@ -12,7 +12,7 @@ $GLOBALS['bucket'] = 'froome-dog';
     <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lobster+Two" type="text/css">
     <link rel="icon" href="https://awsmedia.s3.amazonaws.com/favicon.ico" type="image/ico" >
     <link rel="shortcut icon" href="https://awsmedia.s3.amazonaws.com/favicon.ico" type="image/ico" >
-    <link rel="stylesheet" href="/styles.css" type="text/css">
+    <link rel="stylesheet" href="/css/styles.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
     // Create bucket object is called by AJAX
@@ -22,7 +22,7 @@ $GLOBALS['bucket'] = 'froome-dog';
 
          $.ajax({
             type: 'post',
-            url: 'create-object.php',
+            url: '/classes/s3-create-object.php',
             data: $('form').serialize(),
             success: function (result) {
                $('#result').append('<li>' + result + '</li>');

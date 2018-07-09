@@ -78,7 +78,7 @@ section.instructions h2 {
     font-size: 1.875em;
     padding-bottom: 3px;
     border-bottom: 6px solid #f90;
-    background: url(/logo_aws_reduced.gif) left center no-repeat;
+    background: url(/images/logo_aws_reduced.gif) left center no-repeat;
 }
 section.instructions ul {
     padding: 0;
