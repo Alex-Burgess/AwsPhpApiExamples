@@ -9,7 +9,7 @@ use Aws\Credentials\AssumeRoleCredentialProvider;
 try {
   $assumeRoleCredentials = new AssumeRoleCredentialProvider([
     'client' => new StsClient([
-        'region' => 'eu-west-1',
+        'region' => $app_configuration['region'],
         'version' => '2011-06-15'
     ]),
     'assume_role_params' => [
@@ -19,7 +19,7 @@ try {
   ]);
 
   $s3 = new S3Client([
-      'region' => 'eu-west-1',
+      'region' => $app_configuration['region'],
       'version' => 'latest',
       'credentials' => $assumeRoleCredentials
   ]);
