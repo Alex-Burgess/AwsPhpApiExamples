@@ -119,24 +119,28 @@
                } ]
             },
             "Policies": [ {
-               "PolicyName": "root",
+               "PolicyName": "PhpExamplesPolicy",
                "PolicyDocument": {
                   "Version" : "2012-10-17",
-                  "Statement": [
-                     {
-                        "Effect": "Allow",
-                        "Action": ["s3:ListAllMyBuckets"],
-                        "Resource": ["*"]
-                      },
-                      {
-                        "Effect": "Allow",
-                        "Action": "s3:*",
-                        "Resource": ["arn:aws:s3:::php-aws-examples*"]
-                     }
-                  ]
+                  "Statement": [{
+                     "Effect": "Allow",
+                     "Action": ["s3:ListAllMyBuckets"],
+                     "Resource": ["*"]
+                   },
+                   {
+                     "Effect": "Allow",
+                     "Action": "s3:*",
+                     "Resource": ["arn:aws:s3:::php-aws-examples*"]
+                  }]
                }
             } ]
          }
       }
+   },
+   "Outputs" : {
+     "StackVPC" : {
+       "Description" : "The name of the beanstalk application",
+       "Value" : { "Ref" : "sampleApplication" }
+     }
    }
 }
