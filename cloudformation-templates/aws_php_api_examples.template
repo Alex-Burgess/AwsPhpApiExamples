@@ -9,77 +9,96 @@
       }
   },
   "Resources": {
-    "sampleApplication": {
-      "Type": "AWS::ElasticBeanstalk::Application",
-      "Properties": {
-         "ApplicationName" : {
-            "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "environment" }} ]
-         },
-         "Description": "AWS Elastic Beanstalk Sample Application"
-      }
-    },
-    "sampleApplicationVersion": {
-      "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
-      "Properties": {
-        "ApplicationName": { "Ref": "sampleApplication" },
-        "Description": "PHP API Code Examples Application Version",
-        "SourceBundle": {
-          "S3Bucket":  "alex-demo-files",
-          "S3Key": "php-applications/php-api-code-examples_v1.0.11.zip"
-        }
-      }
-    },
-    "sampleConfigurationTemplate": {
-      "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
-      "Properties": {
-        "ApplicationName": { "Ref": "sampleApplication" },
-        "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "sampleApplication" } ] ] },
-        "OptionSettings": [
-          {
-            "Namespace": "aws:autoscaling:asg",
-            "OptionName": "MinSize",
-            "Value": "1"
-          },
-          {
-            "Namespace": "aws:autoscaling:asg",
-            "OptionName": "MaxSize",
-            "Value": "3"
-          },
-          {
-            "Namespace": "aws:elasticbeanstalk:environment",
-            "OptionName": "EnvironmentType",
-            "Value": "LoadBalanced"
-          },
-          {
-           "Namespace": "aws:elasticbeanstalk:environment",
-           "OptionName": "ServiceRole",
-           "Value": "aws-elasticbeanstalk-service-role"
-         },
-         {
-           "Namespace": "aws:autoscaling:launchconfiguration",
-           "OptionName": "IamInstanceProfile",
-           "Value": "aws-elasticbeanstalk-ec2-role"
-         },
-         {
-          "Namespace": "aws:elasticbeanstalk:application:environment",
-          "OptionName": "PHP_APP_ENV",
-          "Value": "DEV"
+     "sampleApplication": {
+        "Type": "AWS::ElasticBeanstalk::Application",
+        "Properties": {
+           "ApplicationName" : {
+             "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "environment" }} ]
+            },
+            "Description": "AWS Elastic Beanstalk Sample Application"
          }
-        ],
-        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.7.1 running PHP 7.1"
+      },
+      "sampleApplicationVersion": {
+         "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
+         "Properties": {
+            "ApplicationName": { "Ref": "sampleApplication" },
+            "Description": "PHP API Code Examples Application Version",
+            "SourceBundle": {
+               "S3Bucket":  "alex-demo-files",
+               "S3Key": "php-applications/php-api-code-examples_v1.0.12.zip"
+            }
+         }
+      },
+      "sampleConfigurationTemplate": {
+         "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
+         "Properties": {
+            "ApplicationName": { "Ref": "sampleApplication" },
+            "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "sampleApplication" } ] ] },
+            "OptionSettings": [
+               {
+                  "Namespace": "aws:autoscaling:asg",
+                  "OptionName": "MinSize",
+                  "Value": "1"
+               },
+               {
+                  "Namespace": "aws:autoscaling:asg",
+                  "OptionName": "MaxSize",
+                  "Value": "3"
+               },
+               {
+                  "Namespace": "aws:elasticbeanstalk:environment",
+                  "OptionName": "EnvironmentType",
+                  "Value": "LoadBalanced"
+               },
+               {
+                  "Namespace": "aws:elasticbeanstalk:environment",
+                  "OptionName": "ServiceRole",
+                  "Value": "aws-elasticbeanstalk-service-role"
+               },
+               {
+                  "Namespace": "aws:autoscaling:launchconfiguration",
+                  "OptionName": "IamInstanceProfile",
+                  "Value": "aws-elasticbeanstalk-ec2-role"
+               },
+               {
+                  "Namespace": "aws:elasticbeanstalk:application:environment",
+                  "OptionName": "PHP_APP_ENV",
+                  "Value": "DEV"
+               }
+            ],
+            "SolutionStackName": "64bit Amazon Linux 2018.03 v2.7.1 running PHP 7.1"
+         }
+      },
+      "sampleEnvironment": {
+         "Type": "AWS::ElasticBeanstalk::Environment",
+         "Properties": {
+            "ApplicationName": { "Ref": "sampleApplication" },
+            "EnvironmentName" : {
+               "Fn::Sub": [ "PHP-API-Examples-${env}", { "env": {"Ref" : "environment" }} ]
+            },
+            "Description": "Environment running PHP API Examples",
+            "TemplateName": { "Ref": "sampleConfigurationTemplate" },
+            "VersionLabel": { "Ref": "sampleApplicationVersion" }
+         }
+      },
+      "PhpExamplesRole": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "RoleName": "PhpExamplesRole",
+            "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [ {
+                  "Effect": "Allow",
+                  "Principal": {
+                     "AWS": [ "arn:aws:iam::369331073513:role/aws-elasticbeanstalk-ec2-role" ]
+                  },
+                  "Action": [ "sts:AssumeRole" ]
+               } ]
+            },
+            "ManagedPolicyArns": [
+               "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+            ]
+         }
       }
-    },
-    "sampleEnvironment": {
-      "Type": "AWS::ElasticBeanstalk::Environment",
-      "Properties": {
-        "ApplicationName": { "Ref": "sampleApplication" },
-        "EnvironmentName" : {
-            "Fn::Sub": [ "PHP-API-Examples-${env}", { "env": {"Ref" : "environment" }} ]
-           },
-        "Description": "Environment running PHP API Examples",
-        "TemplateName": { "Ref": "sampleConfigurationTemplate" },
-        "VersionLabel": { "Ref": "sampleApplicationVersion" }
-      }
-    }
-  }
+   }
 }
