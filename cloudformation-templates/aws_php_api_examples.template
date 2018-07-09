@@ -25,7 +25,7 @@
             "Description": "PHP API Code Examples Application Version",
             "SourceBundle": {
                "S3Bucket":  "alex-demo-files",
-               "S3Key": "php-applications/php-api-code-examples_v1.0.12.zip"
+               "S3Key": "php-applications/php-api-code-examples_v1.0.13.zip"
             }
          }
       },
@@ -81,6 +81,29 @@
             "VersionLabel": { "Ref": "sampleApplicationVersion" }
          }
       },
+      "PhpAwsExamples": {
+         "Type" : "AWS::S3::Bucket",
+         "Properties" : {
+            "BucketName" : "php-aws-examples",
+            "AccessControl" : "Private",
+         }
+      },
+      "PhpAwsExamplesSee": {
+         "Type" : "AWS::S3::Bucket",
+         "Properties" : {
+            "BucketName" : "php-aws-examples-sse",
+            "AccessControl" : "Private",
+            "BucketEncryption": {
+               "ServerSideEncryptionConfiguration": [
+               {
+                  "ServerSideEncryptionByDefault": {
+                     "SSEAlgorithm": "aws:kms",
+                     "KMSMasterKeyID": "arn:aws:kms:eu-west-1:369331073513:key/26d74e77-75aa-4f99-b7e2-cb25dc1b0d55"
+                  }
+               }]
+            }
+         }
+      },
       "PhpExamplesRole": {
          "Type": "AWS::IAM::Role",
          "Properties": {
@@ -95,9 +118,24 @@
                   "Action": [ "sts:AssumeRole" ]
                } ]
             },
-            "ManagedPolicyArns": [
-               "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-            ]
+            "Policies": [ {
+               "PolicyName": "root",
+               "PolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [
+                     {
+                        "Effect": "Allow",
+                        "Action": ["s3:ListAllMyBuckets"],
+                        "Resource": ["*"]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": "s3:*",
+                        "Resource": ["arn:aws:s3:::php-aws-examples*"]
+                     }
+                  ]
+               }
+            } ]
          }
       }
    }

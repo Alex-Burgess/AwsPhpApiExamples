@@ -3,7 +3,7 @@
 require 'vendor/autoload.php';
 require 'classes/s3-connection.php';     // Provides S3 connection in variable $s3 or $s3_connect_error
 
-$GLOBALS['bucket'] = 'froome-dog';
+$GLOBALS['bucket'] = 'php-aws-examples';
 ?>
 <!doctype html>
 <html lang="en">
