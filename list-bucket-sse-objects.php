@@ -1,41 +1,9 @@
 <?php
 
 require 'vendor/autoload.php';
+require 's3-connection.php';     // Provides S3 connection in variable $s3 or $s3_connect_error
 
-use Aws\Sts\StsClient;
-use Aws\S3\S3Client;
-use Aws\S3\Exception\S3Exception;
-use Aws\Credentials\AssumeRoleCredentialProvider;
-
-$bucket = 'froome-dog-sse';
-
-try {
-  $assumeRoleCredentials = new AssumeRoleCredentialProvider([
-    'client' => new StsClient([
-        'region' => 'eu-west-1',
-        'version' => '2011-06-15'
-    ]),
-    'assume_role_params' => [
-        'RoleArn' => 'arn:aws:iam::369331073513:role/FroomeyS3AccessRole', // REQUIRED
-        'RoleSessionName' => 'test', // REQUIRED
-    ]
-  ]);
-
-  $s3 = new S3Client([
-      'region' => 'eu-west-1',
-      'version' => 'latest',
-      'signature' => 'v4',
-      'credentials' => $assumeRoleCredentials   // Comment to run code as CLI user (Alex)
-  ]);
-
-  $result = $s3->listObjects([
-      'Bucket' => $bucket
-  ]);
-
-} catch (Exception $e) {
-  $error = $e;
-  $error_message = $e->getMessage();
-}
+$GLOBALS['bucket'] = 'froome-dog-sse';
 ?>
 <!doctype html>
 <html lang="en">
@@ -56,28 +24,32 @@ try {
     </section>
 
     <section class="instructions">
-        <h2><?php echo $bucket ?></h2>
+        <h2><?php echo $GLOBALS['bucket'] ?></h2>
           <?php
-            if ($error) {
-              echo "<ul><li>" . $error_message . "</li>";
-              echo "<li>" . $error . "</li></ul>";
-            } else {
-              foreach ($result['Contents'] as $object) {
-                if (preg_match('/320x240.JPG/', $object['Key'])) {
-                  //Creating a presigned URL
-                  $cmd = $s3->getCommand('GetObject', [
-                      'Bucket' => $bucket,
-                      'Key'    => $object['Key']
-                  ]);
+             if ($s3_connect_error) {
+               echo "<ul><li>" . $s3_connect_error_message . "</li>";
+               echo "<li>" . $s3_connect_error . "</li></ul>";
+               } else {
+                  $result = $s3->listObjects([
+                     'Bucket' => $GLOBALS['bucket']
+               ]);
 
-                  $request = $s3->createPresignedRequest($cmd, '+20 minutes');
+               foreach ($result['Contents'] as $object) {
+                  if (preg_match('/320x240.JPG/', $object['Key'])) {
+                     //Creating a presigned URL
+                     $cmd = $s3->getCommand('GetObject', [
+                        'Bucket' => $GLOBALS['bucket'],
+                        'Key'    => $object['Key']
+                     ]);
 
-                  // Get the actual presigned-url
-                  $presignedUrl = (string) $request->getUri();
+                     $request = $s3->createPresignedRequest($cmd, '+20 minutes');
 
-                  echo "<br><img src=\"" . $presignedUrl . "\"</br>";
-                }
-              }
+                     // Get the actual presigned-url
+                     $presignedUrl = (string) $request->getUri();
+
+                     echo "<br><img src=\"" . $presignedUrl . "\"</br>";
+                  }
+               }
             }
           ?>
     </section>

@@ -15,6 +15,7 @@ $GLOBALS['bucket'] = 'froome-dog';
     <link rel="stylesheet" href="/styles.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
+    // Create bucket object is called by AJAX
     $(function () {
       $('#create_form').on('submit', function (e) {
          e.preventDefault();
@@ -24,7 +25,6 @@ $GLOBALS['bucket'] = 'froome-dog';
             url: 'create-object.php',
             data: $('form').serialize(),
             success: function (result) {
-               //alert('form was submitted');
                $('#result').append('<li>' + result + '</li>');
             }
          });
