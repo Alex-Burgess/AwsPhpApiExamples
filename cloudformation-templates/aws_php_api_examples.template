@@ -20,6 +20,11 @@
          "Default" : "PhpExamplesRole",
          "Description" : "Enter the name of the application role"
       },
+      "KmsKeyAdminUser" : {
+         "Type" : "String",
+         "Default" : "Alex",
+         "Description" : "Enter the user name of the KMS Key administrator"
+      }
   },
   "Resources": {
      "PhpApplication": {
@@ -94,29 +99,6 @@
             "VersionLabel": { "Ref": "PhpApplicationVersion" }
          }
       },
-      "PhpAwsExamples": {
-         "Type" : "AWS::S3::Bucket",
-         "Properties" : {
-            "BucketName" : "php-aws-examples",
-            "AccessControl" : "Private",
-         }
-      },
-      "PhpAwsExamplesSse": {
-         "Type" : "AWS::S3::Bucket",
-         "Properties" : {
-            "BucketName" : "php-aws-examples-sse",
-            "AccessControl" : "Private",
-            "BucketEncryption": {
-               "ServerSideEncryptionConfiguration": [
-               {
-                  "ServerSideEncryptionByDefault": {
-                     "SSEAlgorithm": "aws:kms",
-                     "KMSMasterKeyID": "arn:aws:kms:eu-west-1:369331073513:key/26d74e77-75aa-4f99-b7e2-cb25dc1b0d55"
-                  }
-               }]
-            }
-         }
-      },
       "PhpExamplesRole": {
          "Type": "AWS::IAM::Role",
          "Properties": {
@@ -126,7 +108,9 @@
                "Statement": [ {
                   "Effect": "Allow",
                   "Principal": {
-                     "AWS": [ "arn:aws:iam::369331073513:role/aws-elasticbeanstalk-ec2-role" ]
+                     "AWS": {
+                        "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/aws-elasticbeanstalk-ec2-role" ] ]
+                     }
                   },
                   "Action": [ "sts:AssumeRole" ]
                } ]
@@ -148,6 +132,124 @@
                }
             } ]
          }
+      },
+      "ApplicationKey" : {
+        "Type" : "AWS::KMS::Key",
+        "Properties" : {
+          "Description" : "PHP API Examples Application key",
+          "KeyPolicy" : {
+            "Version": "2012-10-17",
+            "Id": "php-application-1",
+            "Statement": [
+              {
+                "Sid": "Enable IAM User Permissions",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": {
+                     "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":root" ] ]
+                  }
+                },
+                "Action": "kms:*",
+                "Resource": "*"
+              },
+              {
+                "Sid": "Allow access for Key Administrators",
+                "Effect": "Allow",
+                "Principal": {
+                   "AWS" : {
+                     "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyAdminUser" } ] ]
+                     }
+                },
+                "Action": [
+                  "kms:Create*",
+                  "kms:Describe*",
+                  "kms:Enable*",
+                  "kms:List*",
+                  "kms:Put*",
+                  "kms:Update*",
+                  "kms:Revoke*",
+                  "kms:Disable*",
+                  "kms:Get*",
+                  "kms:Delete*",
+                  "kms:TagResource",
+                  "kms:UntagResource",
+                  "kms:ScheduleKeyDeletion",
+                  "kms:CancelKeyDeletion"
+                ],
+                "Resource": "*"
+              },
+              {
+                "Sid": "Allow use of the key",
+                "Effect": "Allow",
+                "Principal": {
+                   "AWS": [
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyAdminUser" } ] ] },
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "PhpExamplesRole" } ] ]}
+                  ]
+                },
+                "Action": [
+                  "kms:Encrypt",
+                  "kms:Decrypt",
+                  "kms:ReEncrypt*",
+                  "kms:GenerateDataKey*",
+                  "kms:DescribeKey"
+                ],
+                "Resource": "*"
+              },
+              {
+                "Sid": "Allow attachment of persistent resources",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": [
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyAdminUser" } ] ] },
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "PhpExamplesRole" } ] ]}
+                  ]
+                },
+                "Action": [
+                  "kms:CreateGrant",
+                  "kms:ListGrants",
+                  "kms:RevokeGrant"
+                ],
+                "Resource": "*",
+                "Condition": {
+                  "Bool": {
+                    "kms:GrantIsForAWSResource": "true"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ApplicationKeyAlias" : {
+         "Type" : "AWS::KMS::Alias",
+         "Properties" : {
+            "AliasName" : "alias/PhpApiExamplesApplicationKey",
+            "TargetKeyId" : {"Ref":"ApplicationKey"}
+         }
+      },
+      "PhpAwsExamples": {
+         "Type" : "AWS::S3::Bucket",
+         "Properties" : {
+            "BucketName" : "php-aws-examples",
+            "AccessControl" : "Private",
+         }
+      },
+      "PhpAwsExamplesSse": {
+         "Type" : "AWS::S3::Bucket",
+         "Properties" : {
+            "BucketName" : "php-aws-examples-sse",
+            "AccessControl" : "Private",
+            "BucketEncryption": {
+               "ServerSideEncryptionConfiguration": [
+               {
+                  "ServerSideEncryptionByDefault": {
+                     "SSEAlgorithm": "aws:kms",
+                     "KMSMasterKeyID": { "Ref" : "ApplicationKey" }
+                  }
+               }]
+            }
+         }
       }
    },
    "Outputs" : {
@@ -167,9 +269,17 @@
         "Description" : "The name of the S3 Bucket with SSE configured",
         "Value" : { "Ref" : "PhpAwsExamplesSse" }
      },
-     "ApplicationRoleDefinition" : {
+     "ApplicationRoleDefinitionName" : {
         "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
         "Value" : { "Ref" : "PhpExamplesRole" }
      },
+     "ApplicationKeyId" : {
+        "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
+        "Value" : { "Ref" : "ApplicationKey" }
+     },
+     "ApplicationKeyAlias" : {
+        "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
+        "Value" : { "Ref" : "ApplicationKeyAlias" }
+     }
    }
 }
