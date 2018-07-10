@@ -14,7 +14,12 @@
       "ApplicationKeyLocation" : {
          "Type" : "String",
          "Description" : "Enter the S3 key location for the php application zip file"
-      }
+      },
+      "ApplicationRole" : {
+         "Type" : "String",
+         "Default" : "PhpExamplesRole",
+         "Description" : "Enter the name of the application role"
+      },
   },
   "Resources": {
      "PhpApplication": {
@@ -115,7 +120,7 @@
       "PhpExamplesRole": {
          "Type": "AWS::IAM::Role",
          "Properties": {
-            "RoleName": "PhpExamplesRole",
+            "RoleName": { "Ref" : "ApplicationRole" },
             "AssumeRolePolicyDocument": {
                "Version" : "2012-10-17",
                "Statement": [ {
