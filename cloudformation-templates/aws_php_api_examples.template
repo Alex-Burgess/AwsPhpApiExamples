@@ -1,39 +1,47 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Parameters": {
-     "environment" : {
+     "DeploymentName" : {
          "Type" : "String",
-         "Default" : "blue",
          "AllowedValues" : ["blue", "green"],
-         "Description" : "Enter the environment."
+         "Description" : "Enter the deployment name",
+         "ConstraintDescription" : "Deployment name must be input and can be either blue or green"
+      },
+      "ApplicationBucketLocation" : {
+         "Type" : "String",
+         "Description" : "Enter the S3 bucket name, where the php applicaiton zip file resides"
+      },
+      "ApplicationKeyLocation" : {
+         "Type" : "String",
+         "Description" : "Enter the S3 key location for the php application zip file"
       }
   },
   "Resources": {
-     "sampleApplication": {
+     "PhpApplication": {
         "Type": "AWS::ElasticBeanstalk::Application",
         "Properties": {
            "ApplicationName" : {
-             "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "environment" }} ]
+             "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "DeploymentName" }} ]
             },
-            "Description": "AWS Elastic Beanstalk Sample Application"
+            "Description": "AWS PHP API Examples Application"
          }
       },
-      "sampleApplicationVersion": {
+      "PhpApplicationVersion": {
          "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
          "Properties": {
-            "ApplicationName": { "Ref": "sampleApplication" },
+            "ApplicationName": { "Ref": "PhpApplication" },
             "Description": "PHP API Code Examples Application Version",
             "SourceBundle": {
-               "S3Bucket":  "alex-demo-files",
-               "S3Key": "php-applications/php-api-code-examples_v1.0.13.zip"
+               "S3Bucket":  { "Ref": "ApplicationBucketLocation"},
+               "S3Key": {"Ref": "ApplicationKeyLocation"}
             }
          }
       },
-      "sampleConfigurationTemplate": {
+      "ApplicationConfigurationTemplate": {
          "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
          "Properties": {
-            "ApplicationName": { "Ref": "sampleApplication" },
-            "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "sampleApplication" } ] ] },
+            "ApplicationName": { "Ref": "PhpApplication" },
+            "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "PhpApplication" } ] ] },
             "OptionSettings": [
                {
                   "Namespace": "aws:autoscaling:asg",
@@ -69,16 +77,16 @@
             "SolutionStackName": "64bit Amazon Linux 2018.03 v2.7.1 running PHP 7.1"
          }
       },
-      "sampleEnvironment": {
+      "ApplicationEnvironment": {
          "Type": "AWS::ElasticBeanstalk::Environment",
          "Properties": {
-            "ApplicationName": { "Ref": "sampleApplication" },
+            "ApplicationName": { "Ref": "PhpApplication" },
             "EnvironmentName" : {
-               "Fn::Sub": [ "PHP-API-Examples-${env}", { "env": {"Ref" : "environment" }} ]
+               "Fn::Sub": [ "PHP-API-Examples-${env}", { "env": {"Ref" : "DeploymentName" }} ]
             },
             "Description": "Environment running PHP API Examples",
-            "TemplateName": { "Ref": "sampleConfigurationTemplate" },
-            "VersionLabel": { "Ref": "sampleApplicationVersion" }
+            "TemplateName": { "Ref": "ApplicationConfigurationTemplate" },
+            "VersionLabel": { "Ref": "PhpApplicationVersion" }
          }
       },
       "PhpAwsExamples": {
@@ -88,7 +96,7 @@
             "AccessControl" : "Private",
          }
       },
-      "PhpAwsExamplesSee": {
+      "PhpAwsExamplesSse": {
          "Type" : "AWS::S3::Bucket",
          "Properties" : {
             "BucketName" : "php-aws-examples-sse",
@@ -138,9 +146,25 @@
       }
    },
    "Outputs" : {
-     "StackVPC" : {
-       "Description" : "The name of the beanstalk application",
-       "Value" : { "Ref" : "sampleApplication" }
-     }
+      "ApplicationName" : {
+        "Description" : "The name of the Elastic Beanstalk application",
+        "Value" : { "Ref" : "PhpApplication" }
+     },
+     "ApplicationVersion" : {
+        "Description" : "The version of the application deployed to Elastic Beanstalk",
+        "Value" : { "Fn::Join" : [ "", [ "s3://", { "Ref": "ApplicationBucketLocation" }, "/", {"Ref": "ApplicationKeyLocation"} ] ] },
+     },
+     "BucketName" : {
+        "Description" : "The name of the S3 Bucket without SSE configured",
+        "Value" : { "Ref" : "PhpAwsExamples" }
+     },
+     "BucketSseName" : {
+        "Description" : "The name of the S3 Bucket with SSE configured",
+        "Value" : { "Ref" : "PhpAwsExamplesSse" }
+     },
+     "ApplicationRoleDefinition" : {
+        "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
+        "Value" : { "Ref" : "PhpExamplesRole" }
+     },
    }
 }
