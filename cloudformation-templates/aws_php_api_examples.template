@@ -24,6 +24,11 @@
          "Type" : "String",
          "Default" : "Alex",
          "Description" : "Enter the user name of the KMS Key administrator"
+      },
+      "SpotPrice" : {
+         "Type" : "Number",
+         "Default" : "0.12",
+         "Description" : "Enter the maximum value for spot price"
       }
   },
   "Resources": {
@@ -82,6 +87,11 @@
                   "Namespace": "aws:elasticbeanstalk:application:environment",
                   "OptionName": "PHP_APP_ENV",
                   "Value": "DEV"
+               },
+               {
+                  "Namespace": "aws:elasticbeanstalk:application:environment",
+                  "OptionName": "EC2_SPOT_PRICE",
+                  "Value": { "Ref" : "SpotPrice" }
                }
             ],
             "SolutionStackName": "64bit Amazon Linux 2018.03 v2.7.1 running PHP 7.1"
@@ -280,6 +290,10 @@
      "ApplicationKeyAlias" : {
         "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
         "Value" : { "Ref" : "ApplicationKeyAlias" }
+     },
+     "SpotPrice" : {
+        "Description" : "The spot price used for ec2 instances in the Elastic Beanstalk application",
+        "Value" : { "Ref" : "SpotPrice" }
      }
    }
 }
