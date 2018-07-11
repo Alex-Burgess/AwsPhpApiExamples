@@ -38,7 +38,17 @@
            "ApplicationName" : {
              "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "DeploymentName" }} ]
             },
-            "Description": "AWS PHP API Examples Application"
+            "Description": "AWS PHP API Examples Application",
+            "ResourceLifecycleConfig" : {
+               "ServiceRole" : { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/aws-elasticbeanstalk-service-role" ] ]},
+               "VersionLifecycleConfig" : {
+                  "MaxCountRule" : {
+                     "DeleteSourceFromS3" : true,
+                     "Enabled" : true,
+                     "MaxCount" : 5
+                  }
+               }
+            }
          }
       },
       "PhpApplicationVersion": {
