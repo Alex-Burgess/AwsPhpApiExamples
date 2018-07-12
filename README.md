@@ -17,20 +17,20 @@ To save money the Elastic Beanstalk application is deployed using spot instances
 
 ## Deployment
 The below procedure deploys the application from scratch:
-1 Create zip file (from the terminal):
+1. Create zip file (from the terminal):
 ```
 $ cd <loc>/AwsPhpApiExamples
 $ zip -r -X php-api-code-examples_vX.Y.Z.zip * .ebextensions/ -x "vendor/*" "cloudformation-templates/*" "test/*"
 ```
-1 Upload zip file to repo bucket (replace bucket with own bucket):
+1. Upload zip file to repo bucket (replace bucket with own bucket):
 ```
 $ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://alex-demo-files/php-applications/
 ```
-1 Upload CloudCormation template to repo bucket (replace bucket with own bucket):
+1. Upload CloudCormation template to repo bucket (replace bucket with own bucket):
 ```
 $ aws s3 cp cloudformation-templates/aws_php_api_examples.template s3://alex-demo-files/cf-templates/
 ```
-1 Create CloudFormation stack:
+1. Create CloudFormation stack:
 ```
 $ aws cloudformation create-stack \
  --stack-name "AWS-PHP-Examples-Green" \
@@ -39,7 +39,7 @@ $ aws cloudformation create-stack \
  --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
  --tags Key=Application,Value=AWS-PHP-Examples-Green
 ```
-1 Loading image files to new S3 Buckets (replace bucket with own bucket)
+1. Loading image files to new S3 Buckets (replace bucket with own bucket)
 ```
 aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples/ --recursive
 aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples-sse/ --recursive
