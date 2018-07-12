@@ -6,48 +6,110 @@ A series of short examples of how to use the PHP AWS API to interact with AWS se
 * (Aurora to be added)
 * (Etc)
 
+## Application Stack Overview
+The following CloudFormation template can be used to create an application stack:  [aws_php_api_examples.template](https://github.com/Alex-Burgess/AwsPhpApiExamples/blob/master/cloudformation-templates/aws_php_api_examples.template).  This creates:
+* A PHP application deployed on Elastic Beanstalk
+* Two S3 buckets (one encrypted, one not), which store image files
+* A role which the Elastic Beanstalk service role can assume to obtain permissions to interact with the S3 buckets created
+* An encryption key in KMS, which encrypts the S3 bucket and is used by the application to perform actions with the bucket.
+
+To save money the Elastic Beanstalk application is deployed using spot instances. This is configured in the .ebextensions.. (link) with the spot price provided as a parameter in the CloudFormation template.  **Note** that at the time of development Elastic Beanstalk did not offer a full feature set with respect to using spot instances. In the rare event that the spot price exceeds the price configured, the instance will be terminated and **NOT** replaced by an ondemand instance, rendering the application unavailable.  If this proves to be a problem the stack can be updated with a higher spot price, or the spot configuration file can be removed and the application re-deployed.
+
+## Deployment
+The below procedure deploys the application from scratch:
+1 Create zip file (from the terminal):
+```
+$ cd <loc>/AwsPhpApiExamples
+$ zip -r -X php-api-code-examples_vX.Y.Z.zip * .ebextensions/ -x "vendor/*" "cloudformation-templates/*" "test/*"
+```
+1 Upload zip file to repo bucket (replace bucket with own bucket):
+```
+$ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://alex-demo-files/php-applications/
+```
+1 Upload CloudCormation template to repo bucket (replace bucket with own bucket):
+```
+$ aws s3 cp cloudformation-templates/aws_php_api_examples.template s3://alex-demo-files/cf-templates/
+```
+1 Create CloudFormation stack:
+```
+$ aws cloudformation create-stack \
+ --stack-name "AWS-PHP-Examples-Green" \
+ --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template \
+ --capabilities CAPABILITY_NAMED_IAM \
+ --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
+ --tags Key=Application,Value=AWS-PHP-Examples-Green
+```
+1 Loading image files to new S3 Buckets (replace bucket with own bucket)
+```
+aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples/ --recursive
+aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples-sse/ --recursive
+```
+
+## Updating the Application Bundle
+1 Create zip file and upload to repo bucket:
+```
+$ cd <loc>/AwsPhpApiExamples
+$ zip -r -X php-api-code-examples_vX.Y.Z.zip * .ebextensions/ -x "vendor/*" "cloudformation-templates/*" "test/*"
+$ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://alex-demo-files/php-applications/
+```
+1 Create change set update (Provide a change-set-name and the location to the new php bundle):
+```
+$ aws cloudformation create-change-set \
+ --change-set-name "DescribeTemplateUpdate" \
+ --stack-name "AWS-PHP-Examples-Green" \
+ --capabilities CAPABILITY_NAMED_IAM \
+ --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip"  \
+ --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+```
+1 Execute the change set (After checking that the change set is as expected, execute the change set):
+```
+$ aws cloudformation execute-change-set \
+  --change-set-name "arn:aws:cloudformation:eu-west-1:369331073513:changeSet/DescribeTemplateUpdate/12d23ce3-5a63-4686-a39f-45376af984a6"
+```
+
+## Updating the Application Stack
+Update the CF template:
+??
+
+Create a change set:
+$ aws cloudformation create-change-set \
+      --change-set-name "DescribeTemplateUpdate" \
+      --stack-name "AWS-PHP-Examples-Green" \
+      --capabilities CAPABILITY_NAMED_IAM \
+      --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_v1.0.X.zip"  \
+      --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+
+Execute the change set (Update change set name):
+$ aws cloudformation execute-change-set \
+  --change-set-name "arn:aws:cloudformation:eu-west-1:369331073513:changeSet/DescribeTemplateUpdate/12d23ce3-5a63-4686-a39f-45376af984a6"
+
+
+Direct stack update: (Alternative, ok for test setups)
+aws cloudformation update-stack \
+   --stack-name "AWS-PHP-Examples-Green" \
+   --capabilities CAPABILITY_NAMED_IAM \
+   --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_v1.0.17.zip"  \
+   --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+
+Check the progress of the stack update:
+$ aws cloudformation describe-stack-events --stack-name "AWS-PHP-Examples-Green”
+
+
 ## Local Execution of Code (MacOS)
 To run a php server locally:
 ```
 $ php -S localhost:8000
 ```
 
-*Include details about aws configure...*
+*Include details about aws configure... Details about creating buckets and adding files, KMS key and policy,... just used cloudformation to create the stack*
 
-## Deployment (MacOS)
-Create zip file (from the terminal):
+## Deleting the stack
+1 Empty S3 buckets
 ```
-$ cd <loc>/AwsPhpApiExamples
-$ zip -r -X php-api-code-examples_vX.Y.Z.zip * -x "*vendor*" "*WorkingSamples*" "*.template"
+$ aws s3 rm s3://php-aws-examples --recursive
+$ aws s3 rm s3://php-aws-examples-sse --recursive
 ```
-
-Upload zip file to S3 bucket:
+1 Delete the stack:
 ```
-$ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://<bucket-name>/php-applications/
-```
-
-Update CloudFormation template (aws_php_api_examples.template) with zip file version:
-```
-"sampleApplicationVersion": {
-   ...
-   "SourceBundle": {
-      "S3Bucket":  "<bucket-name>",
-      "S3Key": "php-applications/php-api-code-examples_vX.Y.Z.zip"
-    }
-    ...
-  }
-},
-```
-
-Upload template to S3:
-```
-$ aws s3 cp aws_php_api_examples.template s3://<bucket-name>/cf-templates/
-```
-
-Create CloudFormation stack:
-```
-$ aws cloudformation create-stack \
-   --stack-name "AWS-PHP-Examples-1" \
-   --template-url https://s3-eu-west-1.amazonaws.com/<bucket-name>/aws_php_api_examples.template \
-   --tags Key=Application,Value=AWS-PHP-Examples-1
+$ aws cloudformation delete-stack --stack-name "AWS-PHP-Examples-Green"
 ```
