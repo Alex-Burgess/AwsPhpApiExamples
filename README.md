@@ -44,72 +44,83 @@ The below procedure deploys the application from scratch:
       aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples/ --recursive
       aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples-sse/ --recursive
       ```
+1. Check the progress of the stack update:
+      ```
+      $ aws cloudformation describe-stack-events --stack-name "AWS-PHP-Examples-Green"
+      ```
+1. Accessing the application:
+**Add an output for the application url**
 
 ## Updating the Application Bundle
-1 Create zip file and upload to repo bucket:
-```
-$ cd <loc>/AwsPhpApiExamples
-$ zip -r -X php-api-code-examples_vX.Y.Z.zip * .ebextensions/ -x "vendor/*" "cloudformation-templates/*" "test/*"
-$ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://alex-demo-files/php-applications/
-```
-1 Create change set update (Provide a change-set-name and the location to the new php bundle):
-```
-$ aws cloudformation create-change-set \
- --change-set-name "DescribeTemplateUpdate" \
- --stack-name "AWS-PHP-Examples-Green" \
- --capabilities CAPABILITY_NAMED_IAM \
- --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip"  \
- --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
-```
-1 Execute the change set (After checking that the change set is as expected, execute the change set):
-```
-$ aws cloudformation execute-change-set \
-  --change-set-name "arn:aws:cloudformation:eu-west-1:369331073513:changeSet/DescribeTemplateUpdate/12d23ce3-5a63-4686-a39f-45376af984a6"
-```
+1. Create zip file and upload to repo bucket:
+      ```
+      $ cd <loc>/AwsPhpApiExamples
+      $ zip -r -X php-api-code-examples_vX.Y.Z.zip * .ebextensions/ -x "vendor/*" "cloudformation-templates/*" "test/*"
+      $ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://alex-demo-files/php-applications/
+      ```
+1. Create change set update (Provide a change-set-name and the location to the new php bundle):
+      ```
+      $ aws cloudformation create-change-set \
+       --change-set-name "DescribeTemplateUpdate" \
+       --stack-name "AWS-PHP-Examples-Green" \
+       --capabilities CAPABILITY_NAMED_IAM \
+       --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip"  \
+       --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+      ```
+1. Execute the change set (After checking that the change set is as expected, execute the change set):
+      ```
+      $ aws cloudformation execute-change-set \
+        --change-set-name "arn:aws:cloudformation:eu-west-1:369331073513:changeSet/DescribeTemplateUpdate/12d23ce3-5a63-4686-a39f-45376af984a6"
+      ```
 
-## Updating the Application Stack
-Update the CF template:
-??
-
-Create a change set:
-$ aws cloudformation create-change-set \
-      --change-set-name "DescribeTemplateUpdate" \
-      --stack-name "AWS-PHP-Examples-Green" \
-      --capabilities CAPABILITY_NAMED_IAM \
-      --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_v1.0.X.zip"  \
-      --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
-
-Execute the change set (Update change set name):
-$ aws cloudformation execute-change-set \
-  --change-set-name "arn:aws:cloudformation:eu-west-1:369331073513:changeSet/DescribeTemplateUpdate/12d23ce3-5a63-4686-a39f-45376af984a6"
-
-
-Direct stack update: (Alternative, ok for test setups)
+Alternatively, if you are happy it is just a bundle update, you can do just a direct update.  (This is not best practice but ok for testing):
+```
 aws cloudformation update-stack \
    --stack-name "AWS-PHP-Examples-Green" \
    --capabilities CAPABILITY_NAMED_IAM \
-   --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_v1.0.17.zip"  \
+   --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip"  \
    --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+```
 
-Check the progress of the stack update:
-$ aws cloudformation describe-stack-events --stack-name "AWS-PHP-Examples-Green”
-
+## Updating the Application Stack
+1. Update and upload the CF template:
+      ```
+      aws s3 cp cloudformation-templates/aws_php_api_examples.template s3://alex-demo-files/cf-templates/
+      ```
+1. Create a change set:
+      ```
+      $ aws cloudformation create-change-set \
+       --change-set-name "DescribeTemplateUpdate" \
+       --stack-name "AWS-PHP-Examples-Green" \
+       --capabilities CAPABILITY_NAMED_IAM \
+       --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_v1.0.X.zip"  \
+       --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+      ```
+1. Execute the change set (Update change set name):
+      ```
+      $ aws cloudformation execute-change-set \
+        --change-set-name "arn:aws:cloudformation:eu-west-1:369331073513:changeSet/DescribeTemplateUpdate/12d23ce3-5a63-4686-a39f-45376af984a6"
+      ```
 
 ## Local Execution of Code (MacOS)
-To run a php server locally:
+The following can be used to run a php server locally:
 ```
 $ php -S localhost:8000
 ```
 
-*Include details about aws configure... Details about creating buckets and adding files, KMS key and policy,... just used cloudformation to create the stack*
+### Notes and Assumptions
+1. The simplest way to get going with local testing is to create a stack with appropriate parameters to create the necessary AWS components.  
+1. The application will authenticate to S3 using the local credentials (Access Key and Secret) so this must be configured.
+1. The application will connect to the bucket configured in the application (config/app.ini).
+1. The testing user will need to have permission to perform actions with the KMS certificate encrypting the S3 bucket.  An IAM user/role can be added as a parameter to the cloudformation stack.
 
 ## Deleting the stack
-1 Empty S3 buckets
-```
-$ aws s3 rm s3://php-aws-examples --recursive
-$ aws s3 rm s3://php-aws-examples-sse --recursive
-```
-1 Delete the stack:
-```
-$ aws cloudformation delete-stack --stack-name "AWS-PHP-Examples-Green"
-```
+1. Empty S3 buckets
+      ```
+      $ aws s3 rm s3://php-aws-examples --recursive
+      $ aws s3 rm s3://php-aws-examples-sse --recursive
+      ```
+1. Delete the stack:
+      ```
+      $ aws cloudformation delete-stack --stack-name "AWS-PHP-Examples-Green"
+      ```
