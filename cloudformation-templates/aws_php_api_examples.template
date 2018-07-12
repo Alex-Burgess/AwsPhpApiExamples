@@ -22,8 +22,11 @@
       },
       "KmsKeyAdminUser" : {
          "Type" : "String",
-         "Default" : "Alex",
          "Description" : "Enter the user name of the KMS Key administrator"
+      },
+      "KmsKeyDevUser" : {
+         "Type" : "String",
+         "Description" : "Enter the user name of a Dev user for KMS Key"
       },
       "SpotPrice" : {
          "Type" : "Number",
@@ -203,7 +206,7 @@
                 "Effect": "Allow",
                 "Principal": {
                    "AWS": [
-                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyAdminUser" } ] ] },
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyDevUser" } ] ] },
                      { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "PhpExamplesRole" } ] ]}
                   ]
                 },
@@ -221,7 +224,7 @@
                 "Effect": "Allow",
                 "Principal": {
                   "AWS": [
-                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyAdminUser" } ] ] },
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyDevUser" } ] ] },
                      { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "PhpExamplesRole" } ] ]}
                   ]
                 },
