@@ -1,6 +1,5 @@
 <?php
-
-$GLOBALS['bucket'] = 'froome-dog';
+$GLOBALS['bucket'] = $app_configuration['bucket'];
 ?>
 <!doctype html>
 <html lang="en">
