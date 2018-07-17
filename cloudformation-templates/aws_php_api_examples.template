@@ -1,24 +1,25 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Parameters": {
-     "DeploymentName" : {
+      "AppName" : {
          "Type" : "String",
-         "AllowedValues" : ["blue", "green"],
-         "Description" : "Enter the deployment name",
-         "ConstraintDescription" : "Deployment name must be input and can be either blue or green"
+         "Description" : "Enter the name for the application",
+         "AllowedPattern" : "^[a-z0-9-]*$",
+         "ConstraintDescription" : "AppName must consist of lowercase letters, numbers or hypens"
       },
-      "ApplicationBucketLocation" : {
+      "Environment": {
+         "Type" : "String",
+         "AllowedValues" : ["prod", "uat", "dev", "test"],
+         "Description" : "Enter the environment",
+         "ConstraintDescription" : "Environment must be one of prod, uat, dev, or test"
+      },
+      "ApplicationBucketName" : {
          "Type" : "String",
          "Description" : "Enter the S3 bucket name, where the php applicaiton zip file resides"
       },
-      "ApplicationKeyLocation" : {
+      "ApplicationObjectLocation" : {
          "Type" : "String",
          "Description" : "Enter the S3 key location for the php application zip file"
-      },
-      "ApplicationRole" : {
-         "Type" : "String",
-         "Default" : "PhpExamplesRole",
-         "Description" : "Enter the name of the application role"
       },
       "KmsKeyAdminUser" : {
          "Type" : "String",
@@ -35,12 +36,10 @@
       }
   },
   "Resources": {
-     "PhpApplication": {
+     "Application": {
         "Type": "AWS::ElasticBeanstalk::Application",
         "Properties": {
-           "ApplicationName" : {
-             "Fn::Sub": [ "PHP API Code Examples (${env})", { "env": {"Ref" : "DeploymentName" }} ]
-            },
+           "ApplicationName" : {"Ref" : "AppName" },
             "Description": "AWS PHP API Examples Application",
             "ResourceLifecycleConfig" : {
                "ServiceRole" : { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/aws-elasticbeanstalk-service-role" ] ]},
@@ -54,22 +53,22 @@
             }
          }
       },
-      "PhpApplicationVersion": {
+      "ApplicationVersion": {
          "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
          "Properties": {
-            "ApplicationName": { "Ref": "PhpApplication" },
+            "ApplicationName": { "Ref": "Application" },
             "Description": "PHP API Code Examples Application Version",
             "SourceBundle": {
-               "S3Bucket":  { "Ref": "ApplicationBucketLocation"},
-               "S3Key": {"Ref": "ApplicationKeyLocation"}
+               "S3Bucket":  { "Ref": "ApplicationBucketName"},
+               "S3Key": {"Ref": "ApplicationObjectLocation"}
             }
          }
       },
       "ApplicationConfigurationTemplate": {
          "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
          "Properties": {
-            "ApplicationName": { "Ref": "PhpApplication" },
-            "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "PhpApplication" } ] ] },
+            "ApplicationName": { "Ref": "Application" },
+            "Description": { "Fn::Join" : [ " ", [ "Configuration Template for", { "Ref": "Application" } ] ] },
             "OptionSettings": [
                {
                   "Namespace": "aws:autoscaling:asg",
@@ -113,19 +112,17 @@
       "ApplicationEnvironment": {
          "Type": "AWS::ElasticBeanstalk::Environment",
          "Properties": {
-            "ApplicationName": { "Ref": "PhpApplication" },
-            "EnvironmentName" : {
-               "Fn::Sub": [ "PHP-API-Examples-${env}", { "env": {"Ref" : "DeploymentName" }} ]
-            },
+            "ApplicationName": { "Ref": "Application" },
+            "EnvironmentName" : { "Fn::Sub": [ "${app}-${env}", { "app": {"Ref" : "AppName" }, "env": {"Ref" : "Environment"}} ]},
             "Description": "Environment running PHP API Examples",
             "TemplateName": { "Ref": "ApplicationConfigurationTemplate" },
-            "VersionLabel": { "Ref": "PhpApplicationVersion" }
+            "VersionLabel": { "Ref": "ApplicationVersion" }
          }
       },
-      "PhpExamplesRole": {
+      "ApplicationRole": {
          "Type": "AWS::IAM::Role",
          "Properties": {
-            "RoleName": { "Ref" : "ApplicationRole" },
+            "RoleName": { "Fn::Sub": [ "${app}-role", { "app": {"Ref" : "AppName" }} ]},
             "AssumeRolePolicyDocument": {
                "Version" : "2012-10-17",
                "Statement": [ {
@@ -139,7 +136,7 @@
                } ]
             },
             "Policies": [ {
-               "PolicyName": "PhpExamplesPolicy",
+               "PolicyName": { "Fn::Sub": [ "${app}-policy", { "app": {"Ref" : "AppName" }} ]},
                "PolicyDocument": {
                   "Version" : "2012-10-17",
                   "Statement": [{
@@ -150,7 +147,9 @@
                    {
                      "Effect": "Allow",
                      "Action": "s3:*",
-                     "Resource": ["arn:aws:s3:::php-aws-examples*"]
+                     "Resource": [
+                        { "Fn::Sub": [ "arn:aws:s3:::${app}*", { "app": {"Ref" : "AppName" }} ]},
+                     ]
                   }]
                }
             } ]
@@ -159,10 +158,10 @@
       "ApplicationKey" : {
         "Type" : "AWS::KMS::Key",
         "Properties" : {
-          "Description" : "PHP API Examples Application key",
+          "Description" : { "Fn::Sub": [ "An encryption key for the ${app} application", { "app": {"Ref" : "AppName" }} ] },
           "KeyPolicy" : {
             "Version": "2012-10-17",
-            "Id": "php-application-1",
+            "Id": { "Fn::Sub": [ "${app}-key-policy", { "app": {"Ref" : "AppName" }} ]},
             "Statement": [
               {
                 "Sid": "Enable IAM User Permissions",
@@ -207,7 +206,7 @@
                 "Principal": {
                    "AWS": [
                      { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyDevUser" } ] ] },
-                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "PhpExamplesRole" } ] ]}
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "ApplicationRole" } ] ]}
                   ]
                 },
                 "Action": [
@@ -225,7 +224,7 @@
                 "Principal": {
                   "AWS": [
                      { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":user/", { "Ref": "KmsKeyDevUser" } ] ] },
-                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "PhpExamplesRole" } ] ]}
+                     { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":role/", { "Ref": "ApplicationRole" } ] ]}
                   ]
                 },
                 "Action": [
@@ -247,21 +246,21 @@
       "ApplicationKeyAlias" : {
          "Type" : "AWS::KMS::Alias",
          "Properties" : {
-            "AliasName" : "alias/PhpApiExamplesApplicationKey",
+            "AliasName": { "Fn::Sub": [ "alias/${app}-application-key", { "app": {"Ref" : "AppName" }} ]},
             "TargetKeyId" : {"Ref":"ApplicationKey"}
          }
       },
-      "PhpAwsExamples": {
+      "BucketNonSSE": {
          "Type" : "AWS::S3::Bucket",
          "Properties" : {
-            "BucketName" : "php-aws-examples",
+            "BucketName": { "Fn::Sub": [ "${app}-non-sse", { "app": {"Ref" : "AppName" }} ]},
             "AccessControl" : "Private",
          }
       },
-      "PhpAwsExamplesSse": {
+      "BucketWithSSE": {
          "Type" : "AWS::S3::Bucket",
          "Properties" : {
-            "BucketName" : "php-aws-examples-sse",
+            "BucketName": { "Fn::Sub": [ "${app}-sse", { "app": {"Ref" : "AppName" }} ]},
             "AccessControl" : "Private",
             "BucketEncryption": {
                "ServerSideEncryptionConfiguration": [
@@ -276,37 +275,41 @@
       }
    },
    "Outputs" : {
+      "ApplicationUrl" : {
+         "Description" : "URL of AWS Elastic Beanstalk Environment",
+         "Value" : { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ApplicationEnvironment", "EndpointURL" ] }]]}
+      },
       "ApplicationName" : {
-        "Description" : "The name of the Elastic Beanstalk application",
-        "Value" : { "Ref" : "PhpApplication" }
-     },
-     "ApplicationVersion" : {
-        "Description" : "The version of the application deployed to Elastic Beanstalk",
-        "Value" : { "Fn::Join" : [ "", [ "s3://", { "Ref": "ApplicationBucketLocation" }, "/", {"Ref": "ApplicationKeyLocation"} ] ] },
-     },
-     "BucketName" : {
-        "Description" : "The name of the S3 Bucket without SSE configured",
-        "Value" : { "Ref" : "PhpAwsExamples" }
-     },
-     "BucketSseName" : {
-        "Description" : "The name of the S3 Bucket with SSE configured",
-        "Value" : { "Ref" : "PhpAwsExamplesSse" }
-     },
-     "ApplicationRoleDefinitionName" : {
-        "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
-        "Value" : { "Ref" : "PhpExamplesRole" }
-     },
-     "ApplicationKeyId" : {
-        "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
-        "Value" : { "Ref" : "ApplicationKey" }
-     },
-     "ApplicationKeyAlias" : {
-        "Description" : "The name of the role that permissions the Elastic Beanstalk application to perform S3 actions",
-        "Value" : { "Ref" : "ApplicationKeyAlias" }
-     },
-     "SpotPrice" : {
-        "Description" : "The spot price used for ec2 instances in the Elastic Beanstalk application",
-        "Value" : { "Ref" : "SpotPrice" }
-     }
+         "Description" : "Name of Elastic Beanstalk application",
+         "Value" : { "Ref" : "Application" }
+      },
+      "ApplicationVersion" : {
+         "Description" : "Version of application deployed to Elastic Beanstalk",
+         "Value" : { "Fn::Join" : [ "", [ "s3://", { "Ref": "ApplicationBucketName" }, "/", {"Ref": "ApplicationObjectLocation"} ] ] },
+      },
+      "BucketWithoutSSEName" : {
+         "Description" : "Name of S3 Bucket without SSE configured",
+         "Value" : { "Ref" : "BucketNonSSE" }
+      },
+      "BucketWithSSEName" : {
+         "Description" : "Name of S3 Bucket with SSE configured",
+         "Value" : { "Ref" : "BucketWithSSE" }
+      },
+      "ApplicationRoleDefinitionName" : {
+         "Description" : "Name of role that permissions the Elastic Beanstalk application to perform S3 actions",
+         "Value" : { "Ref" : "ApplicationRole" }
+      },
+      "ApplicationKeyId" : {
+         "Description" : "Name of role that permissions the Elastic Beanstalk application to perform S3 actions",
+         "Value" : { "Ref" : "ApplicationKey" }
+      },
+      "ApplicationKeyAlias" : {
+         "Description" : "Name of role that permissions the Elastic Beanstalk application to perform S3 actions",
+         "Value" : { "Ref" : "ApplicationKeyAlias" }
+      },
+      "SpotPrice" : {
+         "Description" : "Spot price used for ec2 instances in the Elastic Beanstalk application",
+         "Value" : { "Ref" : "SpotPrice" }
+      }
    }
 }

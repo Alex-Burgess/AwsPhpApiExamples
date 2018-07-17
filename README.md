@@ -13,7 +13,7 @@ The following CloudFormation template can be used to create an application stack
 * A role which the Elastic Beanstalk service role can assume to obtain permissions to interact with the S3 buckets created
 * An encryption key in KMS, which encrypts the S3 bucket and is used by the application to perform actions with the bucket.
 
-To save money the Elastic Beanstalk application is deployed using spot instances. This is configured in the .ebextensions.. (link) with the spot price provided as a parameter in the CloudFormation template.  **Note** that at the time of development Elastic Beanstalk did not offer a full feature set with respect to using spot instances. In the rare event that the spot price exceeds the price configured, the instance will be terminated and **NOT** replaced by an ondemand instance, rendering the application unavailable.  If this proves to be a problem the stack can be updated with a higher spot price, or the spot configuration file can be removed and the application re-deployed.
+To save money the Elastic Beanstalk application is deployed using spot instances. This is configured in the .ebextensions.. (link) with the spot price provided as a parameter in the CloudFormation template.  **Note** that at the time of development Elastic Beanstalk did not offer a full feature set with respect to using spot instances. In the rare event that the spot price exceeds the price configured, the instance will be terminated and **NOT** replaced by an on demand instance, rendering the application unavailable.  If this proves to be a problem the stack can be updated with a higher spot price, or the spot configuration file can be removed and the application re-deployed.
 
 ## Deployment
 The below procedure deploys the application from scratch:
@@ -26,6 +26,10 @@ The below procedure deploys the application from scratch:
       ```
       $ aws s3 cp php-api-code-examples_vX.Y.Z.zip s3://alex-demo-files/php-applications/
       ```
+1. Validate template locally:
+      ```
+      $ aws cloudformation validate-template --template-body file://aws_php_api_examples.template
+      ```
 1. Upload CloudCormation template to repo bucket (replace bucket with own bucket):
       ```
       $ aws s3 cp cloudformation-templates/aws_php_api_examples.template s3://alex-demo-files/cf-templates/
@@ -33,20 +37,25 @@ The below procedure deploys the application from scratch:
 1. Create CloudFormation stack:
       ```
       $ aws cloudformation create-stack \
-       --stack-name "AWS-PHP-Examples-Green" \
+       --stack-name "AWS-PHP-Stack-1" \
        --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template \
        --capabilities CAPABILITY_NAMED_IAM \
-       --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
-       --tags Key=Application,Value=AWS-PHP-Examples-Green
+       --tags Key=Application,Value=AWS-PHP-Examples \
+       --parameters ParameterKey=AppName,ParameterValue="aws-php-api-examples" \
+       ParameterKey=Environment,ParameterValue=test \
+       ParameterKey=ApplicationBucketName,ParameterValue=alex-demo-files \
+       ParameterKey=ApplicationObjectLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
+       ParameterKey=KmsKeyAdminUser,ParameterValue=Alex \
+       ParameterKey=KmsKeyDevUser,ParameterValue=Alex      
       ```
 1. Loading image files to new S3 Buckets (replace bucket with own bucket)
       ```
-      aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples/ --recursive
-      aws s3 cp s3://alex-demo-files/images/ s3://php-aws-examples-sse/ --recursive
+      $ aws s3 cp s3://alex-demo-files/images/ s3://aws-php-api-examples-non-sse/ --recursive
+      $ aws s3 cp s3://alex-demo-files/images/ s3://aws-php-api-examples-sse/ --recursive
       ```
 1. Check the progress of the stack update:
       ```
-      $ aws cloudformation describe-stack-events --stack-name "AWS-PHP-Examples-Green"
+      $ aws cloudformation describe-stack-events --stack-name "AWS-PHP-Stack-1"
       ```
 1. Accessing the application:
 **Add an output for the application url**
@@ -62,10 +71,15 @@ The below procedure deploys the application from scratch:
       ```
       $ aws cloudformation create-change-set \
        --change-set-name "DescribeTemplateUpdate" \
-       --stack-name "AWS-PHP-Examples-Green" \
+       --stack-name "AWS-PHP-Stack-1" \
+       --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template \
        --capabilities CAPABILITY_NAMED_IAM \
-       --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip"  \
-       --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+       --parameters ParameterKey=AppName,ParameterValue=aws-php-api-examples \
+       ParameterKey=Environment,ParameterValue=test \
+       ParameterKey=ApplicationBucketName,ParameterValue=alex-demo-files \
+       ParameterKey=ApplicationObjectLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
+       ParameterKey=KmsKeyAdminUser,ParameterValue=Alex \
+       ParameterKey=KmsKeyDevUser,ParameterValue=Alex
       ```
 1. Execute the change set (After checking that the change set is as expected, execute the change set):
       ```
@@ -76,10 +90,15 @@ The below procedure deploys the application from scratch:
 Alternatively, if you are happy it is just a bundle update, you can do just a direct update.  (This is not best practice but ok for testing):
 ```
 aws cloudformation update-stack \
-   --stack-name "AWS-PHP-Examples-Green" \
-   --capabilities CAPABILITY_NAMED_IAM \
-   --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip"  \
-   --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+ --stack-name "AWS-PHP-Stack-1" \
+ --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+ --capabilities CAPABILITY_NAMED_IAM \
+ --parameters ParameterKey=AppName,ParameterValue=aws-php-api-examples \
+ ParameterKey=Environment,ParameterValue=test \
+   ParameterKey=ApplicationBucketName,ParameterValue=alex-demo-files \
+   ParameterKey=ApplicationObjectLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
+   ParameterKey=KmsKeyAdminUser,ParameterValue=Alex \
+   ParameterKey=KmsKeyDevUser,ParameterValue=Alex
 ```
 
 ## Updating the Application Stack
@@ -90,11 +109,16 @@ aws cloudformation update-stack \
 1. Create a change set:
       ```
       $ aws cloudformation create-change-set \
-       --change-set-name "DescribeTemplateUpdate" \
-       --stack-name "AWS-PHP-Examples-Green" \
-       --capabilities CAPABILITY_NAMED_IAM \
-       --parameters ParameterKey=DeploymentName,ParameterValue=green ParameterKey=ApplicationBucketLocation,ParameterValue=alex-demo-files ParameterKey=ApplicationKeyLocation,ParameterValue="php-applications/php-api-code-examples_v1.0.X.zip"  \
-       --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template
+      --change-set-name "DescribeTemplateUpdate" \
+      --stack-name "AWS-PHP-Stack-1" \
+      --template-url https://s3-eu-west-1.amazonaws.com/alex-demo-files/cf-templates/aws_php_api_examples.template \
+      --capabilities CAPABILITY_NAMED_IAM \
+      --parameters ParameterKey=AppName,ParameterValue=aws-php-api-examples \
+      ParameterKey=Environment,ParameterValue=test \
+      ParameterKey=ApplicationBucketName,ParameterValue=alex-demo-files \
+      ParameterKey=ApplicationObjectLocation,ParameterValue="php-applications/php-api-code-examples_vX.Y.Z.zip" \
+      ParameterKey=KmsKeyAdminUser,ParameterValue=Alex \
+      ParameterKey=KmsKeyDevUser,ParameterValue=Alex
       ```
 1. Execute the change set (Update change set name):
       ```
@@ -117,10 +141,10 @@ $ php -S localhost:8000
 ## Deleting the stack
 1. Empty S3 buckets
       ```
-      $ aws s3 rm s3://php-aws-examples --recursive
-      $ aws s3 rm s3://php-aws-examples-sse --recursive
+      $ aws s3 rm s3://aws-php-api-examples-non-sse --recursive
+      $ aws s3 rm s3://aws-php-api-examples-sse --recursive
       ```
 1. Delete the stack:
       ```
-      $ aws cloudformation delete-stack --stack-name "AWS-PHP-Examples-Green"
+      $ aws cloudformation delete-stack --stack-name "AWS-PHP-Stack-1"
       ```
